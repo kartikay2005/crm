@@ -33,4 +33,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD pytho
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
-CMD gunicorn api.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile -
+CMD gunicorn api.main:app -k uvicorn.workers.UvicornWorker -w ${WEB_CONCURRENCY:-1} --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile -
