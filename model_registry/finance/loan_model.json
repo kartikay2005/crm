@@ -1,0 +1,39 @@
+{
+  "name": "Loan Default Predictor",
+  "version": "1.0.0",
+  "domain": "Finance",
+  "problem_type": "binary_classification",
+  "target_variable": "default",
+  "required_features": [
+    {
+      "name": "income",
+      "dtype": "numerical"
+    },
+    {
+      "name": "credit_score",
+      "dtype": "numerical"
+    },
+    {
+      "name": "loan_amount",
+      "dtype": "numerical"
+    },
+    {
+      "name": "debt_ratio",
+      "dtype": "numerical"
+    }
+  ],
+  "optional_features": [
+    {
+      "name": "interest_rate",
+      "dtype": "numerical"
+    },
+    {
+      "name": "customer_id",
+      "dtype": "numerical"
+    }
+  ],
+  "allowed_missing_pct": 10.0,
+  "accuracy": 0.744,
+  "training_date": "2026-07-21",
+  "description": "Predicts loan default risk from income, credit score, loan amount, and debt ratio. Demo model trained on synthetic data for pipeline validation."
+}

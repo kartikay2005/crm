@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+*.db
+.env
+.git
+.pytest_cache
+frontend/node_modules
+frontend/dist
+data/dataset_uploads
+tests
+.github

@@ -1,0 +1,26 @@
+{
+  "name": "Retail Revenue Forecaster",
+  "version": "0.1.0-stub",
+  "domain": "Retail",
+  "problem_type": "regression",
+  "target_variable": "revenue",
+  "required_features": [
+    {
+      "name": "product",
+      "dtype": "categorical"
+    },
+    {
+      "name": "quantity",
+      "dtype": "numerical"
+    },
+    {
+      "name": "profit",
+      "dtype": "numerical"
+    }
+  ],
+  "optional_features": [],
+  "allowed_missing_pct": 10.0,
+  "accuracy": null,
+  "training_date": null,
+  "description": "Not yet trained \u2014 metadata-only registry entry for testing the 'schema matches but artifact unavailable' fallback path."
+}

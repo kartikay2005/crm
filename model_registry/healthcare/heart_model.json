@@ -1,0 +1,35 @@
+{
+  "name": "Heart Disease Risk Predictor",
+  "version": "1.0.0",
+  "domain": "Healthcare",
+  "problem_type": "binary_classification",
+  "target_variable": "diagnosis",
+  "required_features": [
+    {
+      "name": "age",
+      "dtype": "numerical"
+    },
+    {
+      "name": "blood_pressure",
+      "dtype": "numerical"
+    },
+    {
+      "name": "heart_rate",
+      "dtype": "numerical"
+    },
+    {
+      "name": "cholesterol",
+      "dtype": "numerical"
+    }
+  ],
+  "optional_features": [
+    {
+      "name": "patient_id",
+      "dtype": "numerical"
+    }
+  ],
+  "allowed_missing_pct": 10.0,
+  "accuracy": 0.825,
+  "training_date": "2026-07-21",
+  "description": "Predicts heart disease risk from age, blood pressure, heart rate, and cholesterol. Demo model trained on synthetic data for pipeline validation."
+}

@@ -1,0 +1,13 @@
+# Dev/test-only dependencies — not needed in production, install alongside
+# requirements.txt for local development or CI.
+#
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+
+pytest>=8.0.0
+pyyaml>=6.0              # only used by ad hoc CI-config validation scripts
+
+# Embedded Postgres for local RLS verification without needing Docker or a
+# system Postgres install — see scripts/test_postgres_rls.py. Not needed
+# for the SQLite-based pytest suite in tests/, only for that standalone
+# pgserver>=0.1.0
+

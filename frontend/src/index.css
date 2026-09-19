@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+/*
+ * Design concept: "Instrument Panel" — this is an analysis tool, not a
+ * marketing page, so the visual language borrows from precision
+ * instrumentation (oscilloscopes, spectrometers) rather than generic
+ * SaaS-dashboard gradients. The through-line signature element is the
+ * radial confidence/quality/readiness gauge, styled like an analog dial,
+ * reused consistently everywhere a 0-100 score appears.
+ *
+ * Deliberately avoiding the three AI-generated-design defaults flagged in
+ * the frontend-design skill: no cream+terracotta, no near-black+acid-green,
+ * no hairline-newspaper broadsheet. Instead: deep ink-navy shell, warm
+ * paper-grey canvas, a muted teal "signal" accent (not terracotta, not
+ * neon), amber for caution, brick-red for critical — banded confidence
+ * colors that read as instrument-panel indicator lights, not alert boxes.
+ */
+@theme {
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", monospace;
+
+  --color-ink-950: #0f1117;
+  --color-ink-900: #14171f;
+  --color-ink-800: #1c202b;
+  --color-ink-700: #2a2f3d;
+  --color-ink-600: #454c5f;
+
+  --color-canvas-50: #f9f8f4;
+  --color-canvas-100: #f2f0e8;
+  --color-canvas-200: #e6e2d6;
+
+  --color-graphite-400: #8890a0;
+  --color-graphite-500: #6b7285;
+  --color-graphite-600: #4b5160;
+
+  --color-signal-500: #2f6f5e;
+  --color-signal-600: #245a4c;
+  --color-signal-100: #dcece7;
+
+  --color-amber-500: #c97a2b;
+  --color-amber-100: #f3e3d0;
+
+  --color-crimson-500: #a63d40;
+  --color-crimson-100: #f0dbdb;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  @apply bg-canvas-50 text-ink-900 dark:bg-ink-950 dark:text-canvas-100;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-feature-settings: "ss01" 1;
+}
+
+.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
