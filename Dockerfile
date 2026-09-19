@@ -29,18 +29,8 @@ USER appuser
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')" || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8000}/healthz')" || exit 1
 
-# Runs migrations, then execs the CMD below — see docker-entrypoint.sh for
-# why this is here (docker-compose up was previously starting the app
-# against an unmigrated, empty database).
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
-# Production: gunicorn with uvicorn workers, not the dev-mode `uvicorn --reload`.
-CMD ["gunicorn", "api.main:app", \
-     "-k", "uvicorn.workers.UvicornWorker", \
-     "-w", "4", \
-     "--bind", "0.0.0.0:8000", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-"]
+CMD gunicorn api.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile -
