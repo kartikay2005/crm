@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+venv_test/
+.venv/
+*.db
+*.sqlite3
+
+# Env / secrets — never commit a real .env
+.env
+!.env.example
+frontend/.env
+!frontend/.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Runtime data
+data/dataset_uploads/*
+!data/dataset_uploads/.gitkeep
+model_registry/*/*.joblib
+!model_registry/**/.gitkeep
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log

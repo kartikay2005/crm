@@ -1,0 +1,59 @@
+# AI CRM Assistant + Dataset Intelligence Engine — Python dependencies
+#
+# This file didn't exist until Segment 10 — every package below was
+# installed ad hoc across 10 segments of development and never previously
+# recorded, which meant a fresh checkout of this project couldn't actually
+# be set up. Built by cross-referencing every `import` statement in the
+# codebase against installed package versions (see
+# CHECKPOINT_DATASET_INTELLIGENCE.md's Segment 10 notes for how this gap
+# was found and closed).
+#
+# Version floors (>=) rather than exact pins, consistent with this
+# project's existing convention. For a real production deployment, freeze
+# these with `pip freeze > requirements-lock.txt` or a proper lockfile tool
+# (pip-tools / poetry) for full reproducibility — floors alone don't
+# guarantee identical installs across environments.
+#
+# Install with: pip install -r requirements.txt
+
+# --- Web framework ---------------------------------------------------------
+fastapi>=0.115.0
+uvicorn>=0.30.0
+gunicorn>=22.0.0
+python-multipart>=0.0.9          # required by FastAPI's UploadFile/File
+starlette>=0.38.0
+
+# --- Data validation / settings ---------------------------------------------
+pydantic>=2.8.0
+pydantic-settings>=2.4.0
+email-validator>=2.2.0           # required by pydantic's EmailStr
+
+# --- Database ----------------------------------------------------------
+SQLAlchemy>=2.0.30
+alembic>=1.13.0
+psycopg[binary]>=3.2.0           # Postgres driver (staging/prod)
+
+# --- Security --------------------------------------------------------------
+argon2-cffi>=23.1.0               # password hashing
+cryptography>=42.0.0              # field-level PII encryption (Fernet)
+PyJWT>=2.8.0                      # access/refresh tokens
+pyotp>=2.9.0                      # TOTP MFA
+
+# --- Observability -----------------------------------------------------
+structlog>=24.1.0
+prometheus-client>=0.20.0
+
+# --- HTTP / caching ----------------------------------------------------
+httpx>=0.27.0                     # outbound calls (LLM polish, REST data sources)
+redis>=5.0.0                      # rate limiting (optional — app degrades gracefully without it)
+
+# --- Data processing / ML (Dataset Intelligence Engine) ---------------------
+pandas>=2.1.0
+numpy>=1.26.0
+scikit-learn==1.9.1               # pinned exactly: model_registry/*.joblib is pickled against this version
+joblib==1.6.0                     # model artifact serialization — pinned to match, see note above
+shap==0.52.0                      # explainable AI (Step 12) — pinned to match, see note above
+
+# --- Report generation (Dataset Intelligence Engine, Step 17) --------------
+reportlab>=4.0.0                  # PDF
+openpyxl>=3.1.0                   # Excel
