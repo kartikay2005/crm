@@ -98,6 +98,12 @@ class Settings(BaseSettings):
     # --- Feature flags -------------------------------------------------------
     enable_feedback_loop: bool = True
     enable_llm_features: bool = False  # opt-in even when key is present
+    
+    # --- Demo seeding (optional) ----------------------------------------------
+    # Shared-secret token guarding POST /_seed-demo. Unset (the default)
+    # means that endpoint always 404s — it's disabled unless you deliberately
+    # opt in for a demo deployment.
+    seed_token: SecretStr | None = None
 
     # --- Seller data source ---------------------------------------------------
     # "sql" (default, reads a canonical view in the primary DB), "rest"
