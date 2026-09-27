@@ -104,6 +104,12 @@ class Settings(BaseSettings):
     # means that endpoint always 404s — it's disabled unless you deliberately
     # opt in for a demo deployment.
     seed_token: SecretStr | None = None
+        # When true, POST /demo-login seeds the demo tenant if needed and hands
+    # back a real, valid session for it with no password check at all — the
+    # point is a recruiter/reviewer never sees a login screen. Safe to leave
+    # on for a demo deployment: it only ever grants access to the sandboxed
+    # "demo" tenant's own data, nothing else. Off by default.
+    enable_demo_mode: bool = False
 
     # --- Seller data source ---------------------------------------------------
     # "sql" (default, reads a canonical view in the primary DB), "rest"
