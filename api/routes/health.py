@@ -18,10 +18,10 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.schemas import HealthResponse
+from api.schemas import HealthResponse, TokenResponse
 from core.config import get_settings
 from core.database import check_database_health
-from services.demo_seed import run_seed_demo
+from services.demo_seed import get_or_create_demo_session, run_seed_demo
 
 router = APIRouter(tags=["health"])
 _settings = get_settings()
@@ -70,3 +70,22 @@ def seed_demo_endpoint(token: str = Query(...), db: Session = Depends(get_db)) -
         },
         "datasets": result["datasets"],
     }
+
+
+@router.post("/demo-login", response_model=TokenResponse)
+def demo_login_endpoint(db: Session = Depends(get_db)):
+    """No password, no login screen — for a demo deployment where anyone
+    with the link should land straight in the app. 404s unless
+    ENABLE_DEMO_MODE is explicitly turned on (see core/config.py); the
+    resulting token only ever grants access to the sandboxed "demo"
+    tenant's own data, nothing else."""
+    settings = get_settings()
+    if not settings.enable_demo_mode:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    result = get_or_create_demo_session(db)
+    return TokenResponse(
+        access_token=result.access_token,
+        refresh_token=result.refresh_token,
+        expires_in_minutes=_settings.jwt_access_token_ttl_minutes,
+    )
