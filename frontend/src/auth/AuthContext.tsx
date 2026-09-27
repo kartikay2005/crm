@@ -1,8 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { apiClient, clearTokens, getAccessToken, setTokens } from "../api/client";
 
+// /demo-login (like /healthz) is mounted at the API root, not under
+// /api/v1 — apiClient's baseURL already includes /api/v1, so derive the
+// root origin from it rather than hardcoding a second base URL.
+const API_ROOT = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1").replace(/\/api\/v1\/?$/, "");
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+
 interface AuthContextValue {
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (tenantSlug: string, email: string, password: string, mfaCode?: string) => Promise<{ mfaRequired: boolean }>;
   logout: () => Promise<void>;
 }
@@ -10,13 +17,42 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Hydrate from any access token already in this tab's sessionStorage
-  // (e.g. a page refresh) instead of always starting logged out — or,
-  // as before, always starting logged in regardless of a real session.
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getAccessToken()));
+  // Only actually "loading" if demo mode is on AND we don't already have a
+  // token — otherwise there's nothing to wait for, skip straight past it.
+  const [isLoading, setIsLoading] = useState(() => DEMO_MODE && !getAccessToken());
 
   useEffect(() => {
-    setIsAuthenticated(Boolean(getAccessToken()));
+    if (getAccessToken()) {
+      setIsAuthenticated(true);
+      setIsLoading(false);
+      return;
+    }
+    if (!DEMO_MODE) {
+      setIsLoading(false);
+      return;
+    }
+    // Demo deployments skip the login screen entirely: silently get a
+    // real session for the sandboxed "demo" tenant on first load. Falls
+    // through to the normal login form if this fails for any reason
+    // (e.g. ENABLE_DEMO_MODE isn't set on the backend, which 404s).
+    let cancelled = false;
+    fetch(`${API_ROOT}/demo-login`, { method: "POST" })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((data) => {
+        if (cancelled) return;
+        setTokens(data.access_token, data.refresh_token);
+        setIsAuthenticated(true);
+      })
+      .catch(() => {
+        // Fall through to showing the real login form.
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (tenantSlug: string, email: string, password: string, mfaCode?: string) => {
@@ -27,9 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ...(mfaCode ? { mfa_code: mfaCode } : {}),
     });
 
-    // The backend answers 202 + { mfa_required, mfa_token } when a code is
-    // still needed — axios treats 202 as success, so check the payload
-    // shape rather than the status code to tell the two apart.
     if (response.data?.mfa_required) {
       return { mfaRequired: true };
     }
@@ -53,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
