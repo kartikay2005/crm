@@ -1,6 +1,8 @@
 import { useState } from "react";
+import axios from "axios";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { LoadingScreen } from "../auth/LoadingScreen";
 
 // Set VITE_DEMO_MODE=true (see frontend/.env.example) to show a hint box
 // with the credentials scripts/seed_demo.py creates, so a recruiter or
@@ -10,7 +12,7 @@ const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 const DEMO_CREDENTIALS = { tenantSlug: "demo", email: "demo@example.com", password: "RecruiterDemo2026!" };
 
 export function Login() {
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, demoError } = useAuth();
   const navigate = useNavigate();
   const [tenantSlug, setTenantSlug] = useState("");
   const [email, setEmail] = useState("");
@@ -25,7 +27,7 @@ export function Login() {
   // has already succeeded — without this, the form would render even
   // though there's already a valid session.
   if (isLoading) {
-    return <div className="min-h-screen bg-ink-950" />;
+    return <LoadingScreen />;
   }
   if (isAuthenticated) {
     return <Navigate to="/datasets" replace />;
@@ -42,8 +44,19 @@ export function Login() {
       } else {
         navigate("/datasets");
       }
-    } catch {
-      setError(mfaRequired ? "Invalid code." : "Invalid email or password.");
+    } catch (err) {
+      // Only a real 401 means wrong credentials. Anything else (no response
+      // at all = network/CORS; 5xx = server fault) gets an honest message —
+      // lumping them all into "Invalid email or password" is what once hid
+      // a broken database connection for days.
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      if (status === 401) {
+        setError(mfaRequired ? "Invalid code." : "Invalid email or password.");
+      } else if (status === undefined) {
+        setError("Can't reach the server — it may be waking up. Wait a moment and try again.");
+      } else {
+        setError(`Server error (HTTP ${status}). Please try again shortly.`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -54,6 +67,9 @@ export function Login() {
       <div className="w-full max-w-sm">
         <h1 className="font-display text-2xl text-canvas-100 mb-1">Dataset Intelligence</h1>
         <p className="text-sm text-graphite-400 mb-6">Sign in to continue.</p>
+        {demoError && (
+          <p className="mb-4 rounded-lg border border-crimson-500/40 bg-crimson-500/10 p-3 text-xs text-crimson-500">{demoError}</p>
+        )}
         {DEMO_MODE && (
           <div className="mb-4 rounded-lg border border-signal-500/40 bg-signal-500/10 p-3 text-xs text-graphite-300">
             <p className="mb-2">
