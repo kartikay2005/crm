@@ -33,6 +33,7 @@ from models.rbac import DEFAULT_ROLE_PERMISSIONS, Role, RolePermission, UserRole
 from models.tenant import Tenant
 from models.user import User
 from services.dataset_intelligence.pipeline import DatasetIntelligenceError, ingest_and_analyze
+from services.auth import _issue_session, AuthResult
 
 DEMO_SLUG = "demo"
 DEMO_EMAIL = "demo@example.com"
@@ -157,3 +158,17 @@ def run_seed_demo(db: Session) -> dict:
         "password": DEMO_PASSWORD,
         "datasets": dataset_results,
     }
+
+
+def get_or_create_demo_session(db: Session) -> AuthResult:
+    """Seeds the demo tenant if needed, then issues it a real session with
+    no password check — reusing services.auth._issue_session, the exact
+    same code path a normal password login uses after verifying the
+    password. This is what makes /demo-login safe to leave public: the
+    resulting token is scoped to the "demo" tenant exactly like a real
+    login would be, it just skips proving who's asking."""
+    run_seed_demo(db)
+    tenant = db.execute(select(Tenant).where(Tenant.slug == DEMO_SLUG)).scalar_one()
+    with tenant_scope(tenant.id, "system", ("system",)):
+        user = db.execute(select(User).where(User.tenant_id == tenant.id, User.email == DEMO_EMAIL)).scalar_one()
+        return _issue_session(db, user, ip_address=None, user_agent="demo-mode")
