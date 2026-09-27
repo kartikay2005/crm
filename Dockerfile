@@ -19,6 +19,13 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
+# Train the demo models and generate demo seller data at BUILD time, baked
+# into the image. Their .joblib artifacts are .gitignored (binaries don't
+# belong in git), and doing this at container start instead competes with
+# the web server for a free tier's CPU/memory and trips the platform's
+# port-scan timeout. At build time there's no timeout and no competition.
+RUN python3 scripts/train_demo_models.py && python3 scripts/generate_demo_sellers.py
+
 # Directories the app writes to at runtime — created here so they exist
 # with the right ownership before the app ever tries to use them.
 RUN mkdir -p data/dataset_uploads model_registry \
@@ -33,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD pytho
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
-CMD gunicorn api.main:app -k uvicorn.workers.UvicornWorker -w ${WEB_CONCURRENCY:-1} --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile -
+CMD gunicorn api.main:app -k uvicorn.workers.UvicornWorker -w ${WEB_CONCURRENCY:-1} --timeout 180 --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile -
