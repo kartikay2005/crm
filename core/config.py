@@ -87,6 +87,10 @@ class Settings(BaseSettings):
 
     # --- CORS / security headers --------------------------------------------
     allowed_origins: list[str] = Field(default_factory=lambda: ["http://localhost:8501"])
+    # Regex alternative to allowed_origins, for hosts that mint a new URL per
+    # deploy (Vercel/Netlify previews). e.g. ALLOWED_ORIGIN_REGEX=
+    # https://crm-[a-z0-9-]+\.vercel\.app — unset means allowed_origins only.
+    allowed_origin_regex: str | None = None
     trusted_hosts: list[str] = Field(default_factory=lambda: ["*"])
 
     # --- LLM (optional) ------------------------------------------------------
@@ -98,13 +102,14 @@ class Settings(BaseSettings):
     # --- Feature flags -------------------------------------------------------
     enable_feedback_loop: bool = True
     enable_llm_features: bool = False  # opt-in even when key is present
-    
+
     # --- Demo seeding (optional) ----------------------------------------------
     # Shared-secret token guarding POST /_seed-demo. Unset (the default)
     # means that endpoint always 404s — it's disabled unless you deliberately
     # opt in for a demo deployment.
     seed_token: SecretStr | None = None
-        # When true, POST /demo-login seeds the demo tenant if needed and hands
+
+    # When true, POST /demo-login seeds the demo tenant if needed and hands
     # back a real, valid session for it with no password check at all — the
     # point is a recruiter/reviewer never sees a login screen. Safe to leave
     # on for a demo deployment: it only ever grants access to the sandboxed

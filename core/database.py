@@ -22,11 +22,14 @@ _settings = get_settings()
 
 def _build_engine() -> Engine:
     url = _settings.database_url.get_secret_value()
+    # Deliberately NO `options=-c statement_timeout=...` startup parameter:
+    # connection poolers (PgBouncer — which Neon, Supabase and most managed
+    # Postgres put in front of the database by default) reject it with
+    # "unsupported startup parameter in options", which made EVERY request
+    # fail while alembic (which never passed it) still migrated fine. The
+    # timeout is applied with a plain SET after connecting instead — see
+    # the connect listener below.
     connect_args: dict = {}
-    # For Postgres, set a server-side statement timeout so runaway queries
-    # can't tie up a pool connection indefinitely.
-    if url.startswith("postgresql"):
-        connect_args["options"] = "-c statement_timeout=30000"  # 30s
 
     # pool_size / max_overflow / pool_timeout are QueuePool-specific
     # arguments. SQLAlchemy auto-selects QueuePool for file-based SQLite
@@ -56,12 +59,23 @@ def _build_engine() -> Engine:
         **pool_kwargs,
     )
 
-    # Enforce SET application_name so DBAs can identify workload in pg_stat_activity
+    # Per-connection session settings, applied with plain SETs (which every
+    # pooler accepts) instead of startup parameters (which poolers reject).
+    # Committed explicitly: without the commit, the SETs sit inside the
+    # implicit transaction psycopg opens and are silently rolled back the
+    # first time the pool resets the connection. Best-effort by design — a
+    # failure here is logged-and-ignored rather than allowed to take down
+    # connectivity, since these are tuning knobs, not correctness.
     if url.startswith("postgresql"):
         @event.listens_for(engine, "connect")
-        def _set_app_name(dbapi_conn, _):
-            with dbapi_conn.cursor() as cur:
-                cur.execute(f"SET application_name = '{_settings.app_name}-{_settings.env}'")
+        def _configure_session(dbapi_conn, _):
+            try:
+                with dbapi_conn.cursor() as cur:
+                    cur.execute("SET statement_timeout = 30000")  # 30s
+                    cur.execute(f"SET application_name = '{_settings.app_name}-{_settings.env}'")
+                dbapi_conn.commit()
+            except Exception:
+                dbapi_conn.rollback()
 
     return engine
 
