@@ -1,10 +1,14 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
-// Redirects to /login when there's no active session instead of always
-// rendering the protected pages regardless of auth state.
 export function ProtectedRoute() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  // While a demo-mode auto-login attempt is in flight, wait rather than
+  // redirecting to /login — avoids a flash of the login form on every
+  // page load for a demo deployment.
+  if (isLoading) {
+    return <div className="min-h-screen bg-ink-950" />;
+  }
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
