@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 // Set VITE_DEMO_MODE=true (see frontend/.env.example) to show a hint box
@@ -10,7 +10,7 @@ const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 const DEMO_CREDENTIALS = { tenantSlug: "demo", email: "demo@example.com", password: "RecruiterDemo2026!" };
 
 export function Login() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [tenantSlug, setTenantSlug] = useState("");
   const [email, setEmail] = useState("");
@@ -19,6 +19,17 @@ export function Login() {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Covers landing on /login directly (a bookmark, browser history, or
+  // typing it by hand) while a demo-mode auto-login is still in flight or
+  // has already succeeded — without this, the form would render even
+  // though there's already a valid session.
+  if (isLoading) {
+    return <div className="min-h-screen bg-ink-950" />;
+  }
+  if (isAuthenticated) {
+    return <Navigate to="/datasets" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
